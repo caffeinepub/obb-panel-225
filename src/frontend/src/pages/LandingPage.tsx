@@ -16,6 +16,7 @@ import {
 import { motion } from "motion/react";
 import { useRef, useState } from "react";
 import {
+  type Bundle,
   Category,
   Rarity,
   useBundles,
@@ -23,6 +24,22 @@ import {
   useTips,
 } from "../hooks/useQueries";
 import { uploadImage } from "../hooks/useStorageClient";
+
+const BUNDLE_IMAGE_MAP: Record<string, string> = {
+  "Shadow Pack": "/assets/generated/bundle-shadow-pack.dim_400x500.png",
+  "Firestorm Bundle": "/assets/generated/bundle-firestorm.dim_400x500.png",
+  "Urban Warrior": "/assets/generated/bundle-urban-warrior.dim_400x500.png",
+};
+
+function getBundleImage(bundle: Bundle): string | null {
+  if (
+    bundle.imageUrl.startsWith("http") ||
+    bundle.imageUrl.startsWith("/assets/generated")
+  ) {
+    return bundle.imageUrl;
+  }
+  return BUNDLE_IMAGE_MAP[bundle.name] ?? null;
+}
 
 function EmberParticles() {
   const embers = [
@@ -187,7 +204,7 @@ export default function LandingPage() {
   const { data: sensitivities, isLoading: sensLoading } = useSensitivities();
   const { data: tips, isLoading: tipsLoading } = useTips();
 
-  const featuredBundles = (bundles ?? []).slice(0, 3);
+  const featuredBundles = bundles ?? [];
   const featuredSens = (sensitivities ?? []).slice(0, 3);
   const featuredTips = (tips ?? []).slice(0, 4);
 
@@ -573,7 +590,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Bundle Showcase Preview */}
+      {/* Bundle Showcase - ALL Bundles */}
       <section className="py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-end justify-between mb-10">
@@ -603,59 +620,65 @@ export default function LandingPage() {
                     style={{ background: "rgba(255,255,255,0.04)" }}
                   />
                 ))
-              : featuredBundles.map((b) => (
-                  <motion.div
-                    key={String(b.id)}
-                    whileHover={{ y: -4, scale: 1.01 }}
-                    className="card-gaming rounded-xl overflow-hidden"
-                  >
-                    <div
-                      className="h-48 flex items-center justify-center relative overflow-hidden"
-                      style={{
-                        background: `linear-gradient(135deg, rgba(20,24,33,1) 0%, ${rarityBg(b.rarity)} 100%)`,
-                      }}
+              : featuredBundles.map((b) => {
+                  const imgSrc = getBundleImage(b);
+                  return (
+                    <motion.div
+                      key={String(b.id)}
+                      whileHover={{ y: -4, scale: 1.01 }}
+                      className="card-gaming rounded-xl overflow-hidden"
                     >
-                      {b.imageUrl ? (
-                        <img
-                          src={b.imageUrl}
-                          alt={b.name}
-                          className="w-full h-full object-cover"
-                        />
-                      ) : (
-                        <Shield
-                          className="w-24 h-24"
-                          style={{ color: rarityColor(b.rarity), opacity: 0.5 }}
-                        />
-                      )}
                       <div
-                        className="absolute top-3 right-3 text-xs font-display font-bold uppercase px-2 py-1 rounded"
+                        className="h-48 flex items-center justify-center relative overflow-hidden"
                         style={{
-                          background: rarityBg(b.rarity),
-                          color: rarityColor(b.rarity),
-                          border: `1px solid ${rarityColor(b.rarity)}40`,
+                          background: `linear-gradient(135deg, rgba(20,24,33,1) 0%, ${rarityBg(b.rarity)} 100%)`,
                         }}
                       >
-                        {b.rarity}
-                      </div>
-                    </div>
-                    <div className="p-4">
-                      <h3 className="font-display font-bold uppercase text-foreground mb-1">
-                        {b.name}
-                      </h3>
-                      <p className="text-muted-foreground text-sm line-clamp-2 mb-3">
-                        {b.description}
-                      </p>
-                      <Link to="/bundles" data-ocid="bundle.button">
-                        <button
-                          type="button"
-                          className="w-full text-xs font-display font-bold uppercase tracking-wider py-2 rounded border border-fire-orange/40 text-fire-orange hover:bg-fire-orange/10 transition-all"
+                        {imgSrc ? (
+                          <img
+                            src={imgSrc}
+                            alt={b.name}
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <Shield
+                            className="w-24 h-24"
+                            style={{
+                              color: rarityColor(b.rarity),
+                              opacity: 0.5,
+                            }}
+                          />
+                        )}
+                        <div
+                          className="absolute top-3 right-3 text-xs font-display font-bold uppercase px-2 py-1 rounded"
+                          style={{
+                            background: rarityBg(b.rarity),
+                            color: rarityColor(b.rarity),
+                            border: `1px solid ${rarityColor(b.rarity)}40`,
+                          }}
                         >
-                          VIEW DETAILS
-                        </button>
-                      </Link>
-                    </div>
-                  </motion.div>
-                ))}
+                          {b.rarity}
+                        </div>
+                      </div>
+                      <div className="p-4">
+                        <h3 className="font-display font-bold uppercase text-foreground mb-1">
+                          {b.name}
+                        </h3>
+                        <p className="text-muted-foreground text-sm line-clamp-2 mb-3">
+                          {b.description}
+                        </p>
+                        <Link to="/bundles" data-ocid="bundle.button">
+                          <button
+                            type="button"
+                            className="w-full text-xs font-display font-bold uppercase tracking-wider py-2 rounded border border-fire-orange/40 text-fire-orange hover:bg-fire-orange/10 transition-all"
+                          >
+                            VIEW DETAILS
+                          </button>
+                        </Link>
+                      </div>
+                    </motion.div>
+                  );
+                })}
             {!bundlesLoading && featuredBundles.length === 0 && (
               <div
                 className="col-span-3 text-center text-muted-foreground py-10"

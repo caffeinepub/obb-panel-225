@@ -10,6 +10,22 @@ import { AnimatePresence, motion } from "motion/react";
 import { useState } from "react";
 import { type Bundle, Rarity, useBundles } from "../hooks/useQueries";
 
+const BUNDLE_IMAGE_MAP: Record<string, string> = {
+  "Shadow Pack": "/assets/generated/bundle-shadow-pack.dim_400x500.png",
+  "Firestorm Bundle": "/assets/generated/bundle-firestorm.dim_400x500.png",
+  "Urban Warrior": "/assets/generated/bundle-urban-warrior.dim_400x500.png",
+};
+
+function getBundleImage(bundle: Bundle): string | null {
+  if (
+    bundle.imageUrl.startsWith("http") ||
+    bundle.imageUrl.startsWith("/assets/generated")
+  ) {
+    return bundle.imageUrl;
+  }
+  return BUNDLE_IMAGE_MAP[bundle.name] ?? null;
+}
+
 const rarityConfig = {
   [Rarity.legendary]: {
     label: "Legendary",
@@ -47,6 +63,7 @@ function BundleCard({
   onView,
 }: { bundle: Bundle; idx: number; onView: (b: Bundle) => void }) {
   const rc = rarityConfig[bundle.rarity];
+  const imgSrc = getBundleImage(bundle);
   return (
     <motion.div
       initial={{ opacity: 0, y: 24 }}
@@ -73,9 +90,9 @@ function BundleCard({
           }}
         />
 
-        {bundle.imageUrl ? (
+        {imgSrc ? (
           <img
-            src={bundle.imageUrl}
+            src={imgSrc}
             alt={bundle.name}
             className="relative z-10 w-full h-full object-cover"
             onError={(e) => {
@@ -290,6 +307,7 @@ export default function BundlesPage() {
           {selectedBundle &&
             (() => {
               const rc = rarityConfig[selectedBundle.rarity];
+              const dialogImg = getBundleImage(selectedBundle);
               return (
                 <>
                   <DialogHeader>
@@ -310,9 +328,9 @@ export default function BundlesPage() {
                         background: `radial-gradient(circle, ${rc.color}15 0%, transparent 70%)`,
                       }}
                     />
-                    {selectedBundle.imageUrl ? (
+                    {dialogImg ? (
                       <img
-                        src={selectedBundle.imageUrl}
+                        src={dialogImg}
                         alt={selectedBundle.name}
                         className="w-full h-full object-cover relative z-10"
                         onError={(e) => {
